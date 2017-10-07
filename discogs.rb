@@ -35,7 +35,7 @@ end
 class DiscogsClient
 	def initialize
 		@json_client = JSONClient.new 'https://api.discogs.com'
-		@json_client.authenticate(:Discogs, "key=jOUDsbzZVnrDNJmDPIeF, secret=HLlLvludcKgpaSfFyHAhkvTQyWlIWiHN") # You need a 'secret' here!
+		@json_client.authenticate(:Discogs, "key=jOUDsbzZVnrDNJmDPIeF, secret=enter_your_secret_here") # You need a 'secret' here!
 	end
 
 	def search(phrase)
@@ -51,19 +51,35 @@ class DiscogsClient
 	end
 end
 
-client = DiscogsClient.new
+class AlbumFormatter
+	def initialize(album)
+		@album = album
+	end
 
-release = client.search "overkill ironbound"
-
-url = release["resource_url"]
-
-album = client.find_album(url)
-
-puts "Tytuł: #{album["title"]}"
-puts "Artysta: #{album["artists"].first["name"]}"
-puts "Gatunek: #{album["genres"].join(", ")}"
-puts "Styl: #{album["styles"].join(". ")}"
-puts "Lista utworów:"
-album["tracklist"].each do |track|
-	puts "#{track["position"]}\t[#{track["duration"]}]\t#{track["title"]}"
+	def print_album
+		puts "Tytuł: #{@album["title"]}"
+		puts "Artysta: #{@album["artists"].first["name"]}"
+		puts "Gatunek: #{@album["genres"].join(", ")}"
+		puts "Styl: #{@album["styles"].join(". ")}"
+		puts "Lista utworów:"
+		@album["tracklist"].each do |track|
+			puts "#{track["position"]}\t[#{track["duration"]}]\t#{track["title"]}"
+		end
+	end
 end
+
+class DiscogsApp
+	def initialize(phrase)
+		@phrase = phrase
+	end
+
+	def run
+		client = DiscogsClient.new
+		release = client.search @phrase
+		url = release["resource_url"]
+		album = client.find_album(url)
+		AlbumFormatter.new(album).print_album
+	end
+end
+
+DiscogsApp.new("overkill ironbound").run
