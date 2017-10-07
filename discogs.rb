@@ -32,16 +32,32 @@ class JSONClient
 	end
 end
 
-json_client = JSONClient.new 'https://api.discogs.com'
-json_client.authenticate(:Discogs, "key=jOUDsbzZVnrDNJmDPIeF, secret=enter_your_secret_here") # You need a 'secret' here!
-json = json_client.get '/database/search', {q: "overkill ironbound"}
+class DiscogsClient
+	def initialize
+		@json_client = JSONClient.new 'https://api.discogs.com'
+		@json_client.authenticate(:Discogs, "key=jOUDsbzZVnrDNJmDPIeF, secret=HLlLvludcKgpaSfFyHAhkvTQyWlIWiHN") # You need a 'secret' here!
+	end
 
-results = json["results"]
-release = results.find { |e| e["type"] == "release" && e["format"].include?("CD") && e["format"].include?("Album") }
+	def search(phrase)
+		json = @json_client.get '/database/search', {q: phrase}
+
+		results = json["results"]
+		release = results.find { |e| e["type"] == "release" && e["format"].include?("CD") && e["format"].include?("Album") }
+		release
+	end
+
+	def find_album(album_url)
+		@json_client.get(album_url)
+	end
+end
+
+client = DiscogsClient.new
+
+release = client.search "overkill ironbound"
 
 url = release["resource_url"]
 
-album = json_client.get(url)
+album = client.find_album(url)
 
 puts "Tytuł: #{album["title"]}"
 puts "Artysta: #{album["artists"].first["name"]}"
